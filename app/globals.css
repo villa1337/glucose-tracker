@@ -8,61 +8,14 @@
 }
 
 html {
-  font-size: 18px; /* Tamaño base más grande para adultos mayores */
+  font-size: 18px;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  color: #1a202c;
   line-height: 1.6;
-}
-
-/* Botones más grandes y accesibles */
-button {
-  min-height: 48px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Botones primarios azules */
-.btn-primary {
-  background: #2563eb;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #1d4ed8;
-}
-
-/* Botones de navegación */
-.nav-button {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid transparent;
-}
-
-.nav-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.nav-button.active {
-  background: white;
-  color: #2563eb;
 }
 
 /* Inputs más grandes */
@@ -89,30 +42,4 @@ input:focus, select:focus {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-}
-
-/* Badges de estado */
-.badge-green {
-  background: #10b981;
-  color: white;
-}
-
-.badge-yellow {
-  background: #f59e0b;
-  color: white;
-}
-
-.badge-red {
-  background: #ef4444;
-  color: white;
-}
-
-.badge-blue {
-  background: #3b82f6;
-  color: white;
-}
-
-.badge-purple {
-  background: #8b5cf6;
-  color: white;
 }

@@ -208,7 +208,7 @@ export default function HealthTracker() {
         </h1>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap justify-center mb-8 card p-2">
+        <div className="flex flex-wrap justify-center mb-8 bg-white/20 backdrop-blur-sm rounded-lg p-2">
           {[
             { id: 'glucose', label: 'Glucosa' },
             { id: 'medications', label: 'Medicamentos' },
@@ -219,8 +219,10 @@ export default function HealthTracker() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 m-1 rounded-lg font-medium transition-colors nav-button ${
-                activeTab === tab.id ? 'active' : ''
+              className={`px-6 py-3 m-1 rounded-lg font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-white text-blue-600 shadow-lg'
+                  : 'text-white hover:bg-white/20'
               }`}
             >
               {tab.label}
@@ -267,7 +269,7 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addGlucoseEntry}
-                  className="btn-primary p-3 rounded-lg text-lg font-medium"
+                  className="bg-blue-600 text-white p-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition-colors"
                 >
                   Agregar
                 </button>
@@ -325,7 +327,7 @@ export default function HealthTracker() {
                           <span className="font-medium">{time}</span>
                           <button
                             onClick={() => logMedicationAdherence(med.id, time, 'tomado')}
-                            className="btn-primary px-3 py-1 rounded text-sm badge-green"
+                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors"
                           >
                             Tomado
                           </button>
@@ -334,7 +336,7 @@ export default function HealthTracker() {
                               const reason = prompt('Razón de omisión (opcional):')
                               logMedicationAdherence(med.id, time, 'omitido', reason || undefined)
                             }}
-                            className="btn-primary px-3 py-1 rounded text-sm badge-red"
+                            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
                           >
                             Omitido
                           </button>
@@ -386,7 +388,7 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addSleepEntry}
-                  className="btn-primary p-3 rounded-lg text-lg font-medium badge-purple"
+                  className="bg-purple-500 text-white p-3 rounded-lg text-lg font-medium hover:bg-purple-600 transition-colors"
                 >
                   Agregar
                 </button>
@@ -456,7 +458,7 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addActivity}
-                  className="btn-primary p-3 rounded-lg text-lg font-medium badge-green"
+                  className="bg-green-500 text-white p-3 rounded-lg text-lg font-medium hover:bg-green-600 transition-colors"
                 >
                   Agregar
                 </button>
