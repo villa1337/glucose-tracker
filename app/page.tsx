@@ -1,249 +1,216 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface GlucoseEntry {
-  id: number
+  id: string
   value: number
-  type: string
+  type: 'ayunas' | 'postprandial'
   date: string
   time: string
-  notes?: string
 }
 
 interface Medication {
-  id: number
+  id: string
   name: string
   dosage: string
   frequency: string
   times: string[]
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://competition-practitioner-val-farmer.trycloudflare.com'
-
-export default function HealthTracker() {
-  const [activeTab, setActiveTab] = useState('glucose')
+export default function Home() {
+  const [activeSection, setActiveSection] = useState<'glucose' | 'meds'>('glucose')
+  const [glucoseView, setGlucoseView] = useState<'track' | 'historic'>('track')
   const [glucoseEntries, setGlucoseEntries] = useState<GlucoseEntry[]>([])
   const [medications, setMedications] = useState<Medication[]>([])
-  const [loading, setLoading] = useState(false)
-
-  // Form states
-  const [glucoseValue, setGlucoseValue] = useState('')
-  const [glucoseType, setGlucoseType] = useState('ayuno')
-  const [glucoseNotes, setGlucoseNotes] = useState('')
+  
+  const [newEntry, setNewEntry] = useState({
+    value: '',
+    type: 'ayunas' as 'ayunas' | 'postprandial'
+  })
 
   useEffect(() => {
-    loadData()
+    const savedEntries = localStorage.getItem('glucoseEntries')
+    if (savedEntries) {
+      setGlucoseEntries(JSON.parse(savedEntries))
+    }
+    
+    const savedMeds = localStorage.getItem('medications')
+    if (savedMeds) {
+      setMedications(JSON.parse(savedMeds))
+    } else {
+      // Default medications
+      setMedications([
+        {
+          id: '1',
+          name: 'Metformina',
+          dosage: '500mg',
+          frequency: 'Cada 12 horas',
+          times: ['08:00', '20:00']
+        },
+        {
+          id: '2',
+          name: 'Insulina',
+          dosage: '10 unidades',
+          frequency: 'Antes de comidas',
+          times: ['07:30', '12:30', '19:30']
+        }
+      ])
+    }
   }, [])
 
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const [glucoseRes, medsRes] = await Promise.all([
-        fetch(`${API_URL}/api/glucose`),
-        fetch(`${API_URL}/api/medications`)
-      ])
-
-      if (glucoseRes.ok) setGlucoseEntries(await glucoseRes.json())
-      if (medsRes.ok) setMedications(await medsRes.json())
-    } catch (error) {
-      console.error('Error loading data:', error)
-    }
-    setLoading(false)
-  }
-
-  const addGlucoseEntry = async () => {
-    if (!glucoseValue) return
+  const saveGlucoseEntry = () => {
+    if (!newEntry.value) return
     
-    try {
-      const response = await fetch(`${API_URL}/api/glucose`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          value: parseInt(glucoseValue),
-          type: glucoseType,
-          notes: glucoseNotes || null
-        })
-      })
-
-      if (response.ok) {
-        setGlucoseValue('')
-        setGlucoseNotes('')
-        loadData()
-      }
-    } catch (error) {
-      console.error('Error adding glucose entry:', error)
+    const now = new Date()
+    const entry: GlucoseEntry = {
+      id: Date.now().toString(),
+      value: parseInt(newEntry.value),
+      type: newEntry.type,
+      date: now.toLocaleDateString('es-ES'),
+      time: now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     }
+    
+    const updated = [...glucoseEntries, entry]
+    setGlucoseEntries(updated)
+    localStorage.setItem('glucoseEntries', JSON.stringify(updated))
+    setNewEntry({ value: '', type: 'ayunas' })
   }
 
-  const logMedicationAdherence = async (medicationId: number, scheduledTime: string, status: string) => {
-    try {
-      await fetch(`${API_URL}/api/medications/adherence`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          medication_id: medicationId,
-          scheduled_time: scheduledTime,
-          status
-        })
-      })
-      loadData()
-    } catch (error) {
-      console.error('Error logging medication adherence:', error)
-    }
-  }
-
-  const chartData = glucoseEntries.slice(0, 20).reverse().map(entry => ({
-    time: `${entry.date} ${entry.time}`,
-    value: entry.value,
-    type: entry.type
+  const chartData = glucoseEntries.map((entry, index) => ({
+    name: `${entry.date} ${entry.time}`,
+    glucosa: entry.value,
+    tipo: entry.type
   }))
 
   return (
-    <div className="container">
-      <div className="nav">
-        <h1>Sistema de Salud Integral</h1>
-        <div className="nav-buttons">
-          {[
-            { id: 'glucose', label: 'Glucosa' },
-            { id: 'medications', label: 'Medicamentos' },
-            { id: 'sleep', label: 'Sueño' },
-            { id: 'activities', label: 'Actividades' },
-            { id: 'analytics', label: 'Análisis' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`nav-button ${activeTab === tab.id ? 'active' : ''}`}
+    <div>
+      <nav className="nav">
+        <div className="container">
+          <h1>Control de Glucosa</h1>
+          <div className="nav-buttons">
+            <button 
+              className={`nav-button ${activeSection === 'glucose' ? 'active' : ''}`}
+              onClick={() => setActiveSection('glucose')}
             >
-              {tab.label}
+              Control de Glucosa
             </button>
-          ))}
-        </div>
-      </div>
-
-      {loading && (
-        <div className="section">
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '1.2rem', color: '#4a5568' }}>Cargando datos...</div>
+            <button 
+              className={`nav-button ${activeSection === 'meds' ? 'active' : ''}`}
+              onClick={() => setActiveSection('meds')}
+            >
+              Medicamentos
+            </button>
           </div>
         </div>
-      )}
+      </nav>
 
-      {/* Glucose Tab */}
-      {activeTab === 'glucose' && (
-        <div>
+      <div className="container">
+        {activeSection === 'glucose' && (
           <div className="section">
-            <h2>Registrar Glucosa</h2>
-            <div className="form-grid">
-              <input
-                type="number"
-                placeholder="Valor de glucosa"
-                value={glucoseValue}
-                onChange={(e) => setGlucoseValue(e.target.value)}
-              />
-              <select
-                value={glucoseType}
-                onChange={(e) => setGlucoseType(e.target.value)}
+            <h2>Control de Glucosa</h2>
+            
+            <div className="button-group">
+              <button 
+                className={`button ${glucoseView === 'track' ? '' : 'secondary'}`}
+                onClick={() => setGlucoseView('track')}
               >
-                <option value="ayuno">En Ayuno</option>
-                <option value="desayuno">Después del Desayuno</option>
-                <option value="comida">Después de la Comida</option>
-                <option value="cena">Después de la Cena</option>
-                <option value="antes-dormir">Antes de Dormir</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Notas (opcional)"
-                value={glucoseNotes}
-                onChange={(e) => setGlucoseNotes(e.target.value)}
-              />
-              <button
-                onClick={addGlucoseEntry}
-                className="button"
+                Registrar Medición
+              </button>
+              <button 
+                className={`button ${glucoseView === 'historic' ? '' : 'secondary'}`}
+                onClick={() => setGlucoseView('historic')}
               >
-                Agregar
+                Ver Historial
               </button>
             </div>
-          </div>
 
-          {chartData.length > 0 && (
-            <div className="section">
-              <h2>Tendencia de Glucosa</h2>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
+            {glucoseView === 'track' && (
+              <div className="form">
+                <div className="form-group">
+                  <label>Nivel de Glucosa (mg/dL)</label>
+                  <input
+                    type="number"
+                    value={newEntry.value}
+                    onChange={(e) => setNewEntry({...newEntry, value: e.target.value})}
+                    placeholder="Ej: 120"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Tipo de Medición</label>
+                  <select
+                    value={newEntry.type}
+                    onChange={(e) => setNewEntry({...newEntry, type: e.target.value as 'ayunas' | 'postprandial'})}
+                  >
+                    <option value="ayunas">En Ayunas</option>
+                    <option value="postprandial">Después de Comer</option>
+                  </select>
+                </div>
+                
+                <button className="button" onClick={saveGlucoseEntry}>
+                  Guardar Medición
+                </button>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="section">
-            <h2>Registros Recientes</h2>
-            {glucoseEntries.slice(0, 10).map(entry => (
-              <div key={entry.id} className="record-item">
-                <span style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2563eb' }}>
-                  {entry.value} mg/dL
-                </span>
-                <span className="badge blue">{entry.type}</span>
-                <span style={{ color: '#6b7280' }}>{entry.date} {entry.time}</span>
-                {entry.notes && <span style={{ fontSize: '0.9rem', color: '#9ca3af' }}>"{entry.notes}"</span>}
+            {glucoseView === 'historic' && (
+              <div>
+                {glucoseEntries.length > 0 && (
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="glucosa" stroke="#3b82f6" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+                
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Hora</th>
+                      <th>Glucosa (mg/dL)</th>
+                      <th>Tipo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {glucoseEntries.slice().reverse().map((entry) => (
+                      <tr key={entry.id}>
+                        <td>{entry.date}</td>
+                        <td>{entry.time}</td>
+                        <td>{entry.value}</td>
+                        <td>{entry.type === 'ayunas' ? 'En Ayunas' : 'Después de Comer'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Medications Tab */}
-      {activeTab === 'medications' && (
-        <div>
+        {activeSection === 'meds' && (
           <div className="section">
-            <h2>Medicamentos Programados</h2>
-            {medications.map(med => (
+            <h2>Horario de Medicamentos</h2>
+            
+            {medications.map((med) => (
               <div key={med.id} className="med-card">
                 <h3>{med.name}</h3>
-                <p style={{ marginBottom: '15px', color: '#6b7280' }}>{med.dosage} - {med.frequency}</p>
-                <div className="button-group">
-                  {med.times.map(time => (
-                    <div key={time} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                      <span style={{ fontWeight: '600', minWidth: '60px' }}>{time}</span>
-                      <button
-                        onClick={() => logMedicationAdherence(med.id, time, 'tomado')}
-                        className="button green"
-                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                      >
-                        Tomado
-                      </button>
-                      <button
-                        onClick={() => logMedicationAdherence(med.id, time, 'omitido')}
-                        className="button red"
-                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                      >
-                        Omitido
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <p><strong>Dosis:</strong> {med.dosage}</p>
+                <p><strong>Frecuencia:</strong> {med.frequency}</p>
+                <p><strong>Horarios:</strong> {med.times.join(', ')}</p>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Other tabs placeholder */}
-      {(activeTab === 'sleep' || activeTab === 'activities' || activeTab === 'analytics') && (
-        <div className="section">
-          <h2>Próximamente</h2>
-          <p>Esta funcionalidad estará disponible pronto.</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

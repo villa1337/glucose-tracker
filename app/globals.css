@@ -159,8 +159,8 @@ body {
   color: #374151;
 }
 
-.form-group input,
-.form-group select {
+.form-grid input,
+.form-grid select {
   width: 100%;
   padding: 12px;
   border: 2px solid #d1d5db;
@@ -169,8 +169,8 @@ body {
   min-height: 48px;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-grid input:focus,
+.form-grid select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
