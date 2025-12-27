@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface GlucoseEntry {
-  id: string
+  id: number
   value: number
   type: 'ayunas' | 'postprandial'
   date: string
@@ -12,45 +12,67 @@ interface GlucoseEntry {
 }
 
 interface Medication {
-  id: string
+  id: number
   name: string
   dosage: string
   frequency: string
   times: string[]
 }
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
 export default function Home() {
   const [activeSection, setActiveSection] = useState<'glucose' | 'meds'>('glucose')
   const [glucoseView, setGlucoseView] = useState<'track' | 'historic'>('track')
   const [glucoseEntries, setGlucoseEntries] = useState<GlucoseEntry[]>([])
   const [medications, setMedications] = useState<Medication[]>([])
+  const [loading, setLoading] = useState(false)
   
   const [newEntry, setNewEntry] = useState({
     value: '',
     type: 'ayunas' as 'ayunas' | 'postprandial'
   })
 
-  useEffect(() => {
-    const savedEntries = localStorage.getItem('glucoseEntries')
-    if (savedEntries) {
-      setGlucoseEntries(JSON.parse(savedEntries))
+  // Fetch glucose entries from API
+  const fetchGlucoseEntries = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/glucose`)
+      if (response.ok) {
+        const data = await response.json()
+        setGlucoseEntries(data)
+      }
+    } catch (error) {
+      console.error('Error fetching glucose entries:', error)
+      // Fallback to localStorage if API fails
+      const savedEntries = localStorage.getItem('glucoseEntries')
+      if (savedEntries) {
+        setGlucoseEntries(JSON.parse(savedEntries))
+      }
     }
-    
-    const savedMeds = localStorage.getItem('medications')
-    if (savedMeds) {
-      setMedications(JSON.parse(savedMeds))
-    } else {
-      // Default medications
+  }
+
+  // Fetch medications from API
+  const fetchMedications = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/medications`)
+      if (response.ok) {
+        const data = await response.json()
+        setMedications(data)
+      }
+    } catch (error) {
+      console.error('Error fetching medications:', error)
+      // Fallback to default medications
       setMedications([
         {
-          id: '1',
+          id: 1,
           name: 'Metformina',
           dosage: '500mg',
           frequency: 'Cada 12 horas',
           times: ['08:00', '20:00']
         },
         {
-          id: '2',
+          id: 2,
           name: 'Insulina',
           dosage: '10 unidades',
           frequency: 'Antes de comidas',
@@ -58,24 +80,55 @@ export default function Home() {
         }
       ])
     }
+  }
+
+  useEffect(() => {
+    fetchGlucoseEntries()
+    fetchMedications()
   }, [])
 
-  const saveGlucoseEntry = () => {
-    if (!newEntry.value) return
+  const saveGlucoseEntry = async () => {
+    if (!newEntry.value || loading) return
     
-    const now = new Date()
-    const entry: GlucoseEntry = {
-      id: Date.now().toString(),
-      value: parseInt(newEntry.value),
-      type: newEntry.type,
-      date: now.toLocaleDateString('es-ES'),
-      time: now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    setLoading(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/glucose`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          value: parseInt(newEntry.value),
+          type: newEntry.type
+        })
+      })
+
+      if (response.ok) {
+        const savedEntry = await response.json()
+        setGlucoseEntries(prev => [savedEntry, ...prev])
+        setNewEntry({ value: '', type: 'ayunas' })
+      } else {
+        throw new Error('Failed to save entry')
+      }
+    } catch (error) {
+      console.error('Error saving glucose entry:', error)
+      // Fallback to localStorage
+      const now = new Date()
+      const entry: GlucoseEntry = {
+        id: Date.now(),
+        value: parseInt(newEntry.value),
+        type: newEntry.type,
+        date: now.toLocaleDateString('es-ES'),
+        time: now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      }
+      
+      const updated = [entry, ...glucoseEntries]
+      setGlucoseEntries(updated)
+      localStorage.setItem('glucoseEntries', JSON.stringify(updated))
+      setNewEntry({ value: '', type: 'ayunas' })
+    } finally {
+      setLoading(false)
     }
-    
-    const updated = [...glucoseEntries, entry]
-    setGlucoseEntries(updated)
-    localStorage.setItem('glucoseEntries', JSON.stringify(updated))
-    setNewEntry({ value: '', type: 'ayunas' })
   }
 
   const chartData = glucoseEntries.map((entry, index) => ({
