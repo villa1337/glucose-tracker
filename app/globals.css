@@ -17,7 +17,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
   color: #1a202c;
   line-height: 1.6;
 }
@@ -29,11 +30,39 @@ button {
   font-weight: 600;
   border-radius: 8px;
   transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
 button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones primarios azules */
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* Botones de navegación */
+.nav-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid transparent;
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-button.active {
+  background: white;
+  color: #2563eb;
 }
 
 /* Inputs más grandes */
@@ -44,46 +73,46 @@ input, select {
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   transition: border-color 0.2s ease;
+  background: white;
 }
 
 input:focus, select:focus {
   outline: none;
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-}
-
-/* Contraste mejorado para texto */
-.text-high-contrast {
-  color: #1a202c;
-  font-weight: 600;
-}
-
-/* Espaciado generoso */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Tarjetas con mejor contraste */
 .card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
-/* Gráficos responsivos */
-.recharts-wrapper {
-  font-size: 14px;
+/* Badges de estado */
+.badge-green {
+  background: #10b981;
+  color: white;
 }
 
-/* Estados de carga */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  font-size: 1.2rem;
-  color: #4a5568;
+.badge-yellow {
+  background: #f59e0b;
+  color: white;
+}
+
+.badge-red {
+  background: #ef4444;
+  color: white;
+}
+
+.badge-blue {
+  background: #3b82f6;
+  color: white;
+}
+
+.badge-purple {
+  background: #8b5cf6;
+  color: white;
 }

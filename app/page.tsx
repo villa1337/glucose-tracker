@@ -201,14 +201,14 @@ export default function HealthTracker() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+        <h1 className="text-3xl font-bold text-center mb-8 text-white">
           Sistema de Salud Integral
         </h1>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap justify-center mb-8 bg-white rounded-lg shadow-sm p-2">
+        <div className="flex flex-wrap justify-center mb-8 card p-2">
           {[
             { id: 'glucose', label: 'Glucosa' },
             { id: 'medications', label: 'Medicamentos' },
@@ -219,10 +219,8 @@ export default function HealthTracker() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 m-1 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`px-6 py-3 m-1 rounded-lg font-medium transition-colors nav-button ${
+                activeTab === tab.id ? 'active' : ''
               }`}
             >
               {tab.label}
@@ -239,7 +237,7 @@ export default function HealthTracker() {
         {/* Glucose Tab */}
         {activeTab === 'glucose' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h2 className="text-2xl font-semibold mb-4">Registrar Glucosa</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input
@@ -269,7 +267,7 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addGlucoseEntry}
-                  className="bg-blue-500 text-white p-3 rounded-lg text-lg font-medium hover:bg-blue-600"
+                  className="btn-primary p-3 rounded-lg text-lg font-medium"
                 >
                   Agregar
                 </button>
@@ -277,7 +275,7 @@ export default function HealthTracker() {
             </div>
 
             {chartData.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="card p-6">
                 <h3 className="text-xl font-semibold mb-4">Tendencia de Glucosa</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
@@ -285,18 +283,18 @@ export default function HealthTracker() {
                     <XAxis dataKey="time" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
+                    <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h3 className="text-xl font-semibold mb-4">Registros Recientes</h3>
               <div className="space-y-2">
                 {glucoseEntries.slice(0, 10).map(entry => (
                   <div key={entry.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                    <span className="text-lg font-medium">{entry.value} mg/dL</span>
+                    <span className="text-lg font-medium text-blue-600">{entry.value} mg/dL</span>
                     <span className="text-gray-600">{entry.type}</span>
                     <span className="text-gray-500">{entry.date} {entry.time}</span>
                     {entry.notes && <span className="text-sm text-gray-400">"{entry.notes}"</span>}
@@ -310,7 +308,7 @@ export default function HealthTracker() {
         {/* Medications Tab */}
         {activeTab === 'medications' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h2 className="text-2xl font-semibold mb-4">Medicamentos Programados</h2>
               <div className="space-y-4">
                 {medications.map(med => (
@@ -327,7 +325,7 @@ export default function HealthTracker() {
                           <span className="font-medium">{time}</span>
                           <button
                             onClick={() => logMedicationAdherence(med.id, time, 'tomado')}
-                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                            className="btn-primary px-3 py-1 rounded text-sm badge-green"
                           >
                             Tomado
                           </button>
@@ -336,7 +334,7 @@ export default function HealthTracker() {
                               const reason = prompt('Razón de omisión (opcional):')
                               logMedicationAdherence(med.id, time, 'omitido', reason || undefined)
                             }}
-                            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                            className="btn-primary px-3 py-1 rounded text-sm badge-red"
                           >
                             Omitido
                           </button>
@@ -353,7 +351,7 @@ export default function HealthTracker() {
         {/* Sleep Tab */}
         {activeTab === 'sleep' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h2 className="text-2xl font-semibold mb-4">Registrar Sueño</h2>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <input
@@ -388,14 +386,14 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addSleepEntry}
-                  className="bg-purple-500 text-white p-3 rounded-lg text-lg font-medium hover:bg-purple-600"
+                  className="btn-primary p-3 rounded-lg text-lg font-medium badge-purple"
                 >
                   Agregar
                 </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h3 className="text-xl font-semibold mb-4">Registros de Sueño</h3>
               <div className="space-y-2">
                 {sleepEntries.slice(0, 10).map(entry => (
@@ -420,7 +418,7 @@ export default function HealthTracker() {
         {/* Activities Tab */}
         {activeTab === 'activities' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h2 className="text-2xl font-semibold mb-4">Registrar Actividad</h2>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <select
@@ -458,14 +456,14 @@ export default function HealthTracker() {
                 />
                 <button
                   onClick={addActivity}
-                  className="bg-green-500 text-white p-3 rounded-lg text-lg font-medium hover:bg-green-600"
+                  className="btn-primary p-3 rounded-lg text-lg font-medium badge-green"
                 >
                   Agregar
                 </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h3 className="text-xl font-semibold mb-4">Actividades Recientes</h3>
               <div className="space-y-2">
                 {activities.slice(0, 10).map(entry => (
@@ -491,7 +489,7 @@ export default function HealthTracker() {
         {activeTab === 'analytics' && analytics && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="card p-6">
                 <h3 className="text-xl font-semibold mb-4">Promedios de Glucosa (30 días)</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={analytics.glucose_stats}>
@@ -504,7 +502,7 @@ export default function HealthTracker() {
                 </ResponsiveContainer>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="card p-6">
                 <h3 className="text-xl font-semibold mb-4">Calidad del Sueño</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
@@ -528,7 +526,7 @@ export default function HealthTracker() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="card p-6">
               <h3 className="text-xl font-semibold mb-4">Resumen de Salud</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
