@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://competition-practitioner-val-farmer.trycloudflare.com'
 
@@ -522,6 +522,56 @@ export default function HealthTracker() {
                         <Tooltip />
                         <Bar dataKey="average" fill="#3b82f6" />
                       </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {analytics.sleep_quality?.length > 0 && (
+                  <div className="chart-container">
+                    <h3>Calidad del Sueño</h3>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analytics.sleep_quality}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({quality, count}) => `${quality}: ${count}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="count"
+                        >
+                          {analytics.sleep_quality.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28'][index % 3]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {analytics.activity_summary?.length > 0 && (
+                  <div className="chart-container">
+                    <h3>Distribución de Actividades</h3>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analytics.activity_summary}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({type, sessions}) => `${type}: ${sessions}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="sessions"
+                        >
+                          {analytics.activity_summary.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={['#FF8042', '#8884D8', '#82CA9D', '#FFC658'][index % 4]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
                     </ResponsiveContainer>
                   </div>
                 )}
