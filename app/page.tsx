@@ -55,10 +55,12 @@ export default function HealthTracker() {
       // Process medication adherence for today
       if (adherenceRes.ok) {
         const adherenceData = await adherenceRes.json()
-        const today = new Date().toLocaleDateString('es-ES')
+        // Use UTC date to match backend (Pi is in GMT)
+        const now = new Date()
+        const today = `${now.getUTCDate().toString().padStart(2, '0')}/${(now.getUTCMonth() + 1).toString().padStart(2, '0')}/${now.getUTCFullYear()}`
         const todayStatus: any = {}
         
-        console.log('Today:', today)
+        console.log('Today (UTC):', today)
         console.log('Adherence data:', adherenceData)
         
         adherenceData.forEach((entry: any) => {
