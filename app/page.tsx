@@ -181,7 +181,7 @@ export default function HealthTracker() {
     }
   }
 
-  const chartData = glucoseEntries.slice(0, 20).reverse().map((entry: any) => ({
+  const chartData = glucoseEntries.slice(0, 30).reverse().map((entry: any) => ({
     time: `${entry.date} ${entry.time}`,
     date: entry.date,
     value: entry.value,
