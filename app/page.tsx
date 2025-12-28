@@ -1,37 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-interface GlucoseEntry {
-  id: number
-  value: number
-  type: string
-  date: string
-  time: string
-  notes?: string
-}
-
-interface Medication {
-  id: number
-  name: string
-  dosage: string
-  frequency: string
-  times: string[]
-}
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://competition-practitioner-val-farmer.trycloudflare.com'
 
 export default function HealthTracker() {
   const [activeTab, setActiveTab] = useState('glucose')
-  const [glucoseEntries, setGlucoseEntries] = useState<GlucoseEntry[]>([])
-  const [medications, setMedications] = useState<Medication[]>([])
+  const [glucoseEntries, setGlucoseEntries] = useState<any[]>([])
+  const [medications, setMedications] = useState<any[]>([])
+  const [sleepEntries, setSleepEntries] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
+  const [analytics, setAnalytics] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
   // Form states
   const [glucoseValue, setGlucoseValue] = useState('')
   const [glucoseType, setGlucoseType] = useState('ayuno')
   const [glucoseNotes, setGlucoseNotes] = useState('')
+  
+  const [bedtime, setBedtime] = useState('')
+  const [wakeTime, setWakeTime] = useState('')
+  const [sleepQuality, setSleepQuality] = useState('buena')
+  const [sleepNotes, setSleepNotes] = useState('')
+  
+  const [activityType, setActivityType] = useState('caminata')
+  const [activityDuration, setActivityDuration] = useState('')
+  const [activityIntensity, setActivityIntensity] = useState('moderado')
+  const [activityNotes, setActivityNotes] = useState('')
 
   useEffect(() => {
     loadData()
@@ -40,13 +36,19 @@ export default function HealthTracker() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [glucoseRes, medsRes] = await Promise.all([
+      const [glucoseRes, medsRes, sleepRes, activitiesRes, analyticsRes] = await Promise.all([
         fetch(`${API_URL}/api/glucose`),
-        fetch(`${API_URL}/api/medications`)
+        fetch(`${API_URL}/api/medications`),
+        fetch(`${API_URL}/api/sleep`),
+        fetch(`${API_URL}/api/activities`),
+        fetch(`${API_URL}/api/analytics`)
       ])
 
       if (glucoseRes.ok) setGlucoseEntries(await glucoseRes.json())
       if (medsRes.ok) setMedications(await medsRes.json())
+      if (sleepRes.ok) setSleepEntries(await sleepRes.json())
+      if (activitiesRes.ok) setActivities(await activitiesRes.json())
+      if (analyticsRes.ok) setAnalytics(await analyticsRes.json())
     } catch (error) {
       console.error('Error loading data:', error)
     }
@@ -77,7 +79,58 @@ export default function HealthTracker() {
     }
   }
 
-  const logMedicationAdherence = async (medicationId: number, scheduledTime: string, status: string) => {
+  const addSleepEntry = async () => {
+    if (!bedtime || !wakeTime) return
+    
+    try {
+      const response = await fetch(`${API_URL}/api/sleep`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bedtime,
+          wake_time: wakeTime,
+          quality: sleepQuality,
+          notes: sleepNotes || null
+        })
+      })
+
+      if (response.ok) {
+        setBedtime('')
+        setWakeTime('')
+        setSleepNotes('')
+        loadData()
+      }
+    } catch (error) {
+      console.error('Error adding sleep entry:', error)
+    }
+  }
+
+  const addActivity = async () => {
+    if (!activityDuration) return
+    
+    try {
+      const response = await fetch(`${API_URL}/api/activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: activityType,
+          duration: parseInt(activityDuration),
+          intensity: activityIntensity,
+          notes: activityNotes || null
+        })
+      })
+
+      if (response.ok) {
+        setActivityDuration('')
+        setActivityNotes('')
+        loadData()
+      }
+    } catch (error) {
+      console.error('Error adding activity:', error)
+    }
+  }
+
+  const logMedicationAdherence = async (medicationId: any, scheduledTime: any, status: any) => {
     try {
       await fetch(`${API_URL}/api/medications/adherence`, {
         method: 'POST',
@@ -94,7 +147,7 @@ export default function HealthTracker() {
     }
   }
 
-  const chartData = glucoseEntries.slice(0, 20).reverse().map(entry => ({
+  const chartData = glucoseEntries.slice(0, 20).reverse().map((entry: any) => ({
     time: `${entry.date} ${entry.time}`,
     value: entry.value,
     type: entry.type
@@ -195,7 +248,7 @@ export default function HealthTracker() {
 
           <div className="section">
             <h2>Registros Recientes</h2>
-            {glucoseEntries.slice(0, 10).map(entry => (
+            {glucoseEntries.slice(0, 10).map((entry: any) => (
               <div key={entry.id} className="record-item">
                 <span style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2563eb' }}>
                   {entry.value} mg/dL
@@ -214,12 +267,12 @@ export default function HealthTracker() {
         <div>
           <div className="section">
             <h2>Medicamentos Programados</h2>
-            {medications.map(med => (
+            {medications.map((med: any) => (
               <div key={med.id} className="med-card">
                 <h3>{med.name}</h3>
                 <p style={{ marginBottom: '15px', color: '#6b7280' }}>{med.dosage} - {med.frequency}</p>
                 <div className="button-group">
-                  {med.times.map(time => (
+                  {med.times.map((time: any) => (
                     <div key={time} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                       <span style={{ fontWeight: '600', minWidth: '60px' }}>{time}</span>
                       <button
@@ -245,11 +298,190 @@ export default function HealthTracker() {
         </div>
       )}
 
-      {/* Other tabs placeholder */}
-      {(activeTab === 'sleep' || activeTab === 'activities' || activeTab === 'analytics') && (
-        <div className="section">
-          <h2>Próximamente</h2>
-          <p>Esta funcionalidad estará disponible pronto.</p>
+      {/* Sleep Tab */}
+      {activeTab === 'sleep' && (
+        <div>
+          <div className="section">
+            <h2>Registrar Sueño</h2>
+            <div className="form-grid">
+              <div className="form-group">
+                <input
+                  type="time"
+                  value={bedtime}
+                  onChange={(e) => setBedtime(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <input
+                  type="time"
+                  value={wakeTime}
+                  onChange={(e) => setWakeTime(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <select
+                  value={sleepQuality}
+                  onChange={(e) => setSleepQuality(e.target.value)}
+                >
+                  <option value="buena">Buena</option>
+                  <option value="regular">Regular</option>
+                  <option value="mala">Mala</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <input
+                  type="text"
+                  placeholder="Notas (opcional)"
+                  value={sleepNotes}
+                  onChange={(e) => setSleepNotes(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <button
+                  onClick={addSleepEntry}
+                  className="button purple"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>Registros de Sueño</h2>
+            {sleepEntries.slice(0, 10).map((entry: any) => (
+              <div key={entry.id} className="record-item">
+                <span style={{ fontSize: '1.2rem', fontWeight: '600' }}>
+                  {entry.hours_slept?.toFixed(1)}h
+                </span>
+                <span>{entry.bedtime} - {entry.wake_time}</span>
+                <span className={`badge ${entry.quality === 'buena' ? 'green' : entry.quality === 'regular' ? 'yellow' : 'red'}`}>
+                  {entry.quality}
+                </span>
+                <span style={{ color: '#6b7280' }}>{entry.date}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Activities Tab */}
+      {activeTab === 'activities' && (
+        <div>
+          <div className="section">
+            <h2>Registrar Actividad</h2>
+            <div className="form-grid">
+              <div className="form-group">
+                <select
+                  value={activityType}
+                  onChange={(e) => setActivityType(e.target.value)}
+                >
+                  <option value="caminata">Caminata</option>
+                  <option value="gimnasio">Gimnasio</option>
+                  <option value="descanso">Descanso</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <input
+                  type="number"
+                  placeholder="Duración (minutos)"
+                  value={activityDuration}
+                  onChange={(e) => setActivityDuration(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <select
+                  value={activityIntensity}
+                  onChange={(e) => setActivityIntensity(e.target.value)}
+                >
+                  <option value="ligero">Ligero</option>
+                  <option value="moderado">Moderado</option>
+                  <option value="intenso">Intenso</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <input
+                  type="text"
+                  placeholder="Notas (opcional)"
+                  value={activityNotes}
+                  onChange={(e) => setActivityNotes(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <button
+                  onClick={addActivity}
+                  className="button green"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="section">
+            <h2>Actividades Recientes</h2>
+            {activities.slice(0, 10).map((entry: any) => (
+              <div key={entry.id} className="record-item">
+                <span style={{ fontSize: '1.2rem', fontWeight: '600' }}>{entry.type}</span>
+                <span>{entry.duration} min</span>
+                <span className={`badge ${entry.intensity === 'ligero' ? 'blue' : entry.intensity === 'moderado' ? 'yellow' : 'red'}`}>
+                  {entry.intensity}
+                </span>
+                <span style={{ color: '#6b7280' }}>{entry.date} {entry.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <div>
+          <div className="section">
+            <h2>Resumen de Salud</h2>
+            {analytics ? (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                  <div style={{ textAlign: 'center', padding: '20px', background: '#dbeafe', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e40af' }}>
+                      {analytics.medication_adherence_rate}%
+                    </div>
+                    <div style={{ color: '#6b7280' }}>Adherencia a Medicamentos</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '20px', background: '#d1fae5', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#065f46' }}>
+                      {analytics.activity_summary?.reduce((sum: any, act: any) => sum + act.total_minutes, 0) || 0}
+                    </div>
+                    <div style={{ color: '#6b7280' }}>Minutos de Actividad</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '20px', background: '#fef3c7', borderRadius: '12px' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#92400e' }}>
+                      {analytics.glucose_stats?.reduce((sum: any, stat: any) => sum + stat.count, 0) || 0}
+                    </div>
+                    <div style={{ color: '#6b7280' }}>Mediciones de Glucosa</div>
+                  </div>
+                </div>
+                
+                {analytics.glucose_stats?.length > 0 && (
+                  <div className="chart-container">
+                    <h3>Promedios de Glucosa por Tipo</h3>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.glucose_stats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="type" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="average" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p>Cargando análisis...</p>
+            )}
+          </div>
         </div>
       )}
     </div>
