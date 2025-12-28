@@ -29,6 +29,7 @@ export default function HealthTracker() {
   const [activityDuration, setActivityDuration] = useState('')
   const [activityIntensity, setActivityIntensity] = useState('moderado')
   const [activityNotes, setActivityNotes] = useState('')
+  const [glucoseFilter, setGlucoseFilter] = useState('all')
 
   useEffect(() => {
     loadData()
@@ -181,7 +182,9 @@ export default function HealthTracker() {
     }
   }
 
-  const chartData = glucoseEntries.slice().reverse().map((entry: any) => ({
+  const chartData = glucoseEntries
+    .filter((entry: any) => glucoseFilter === 'all' || entry.type === glucoseFilter)
+    .slice().reverse().map((entry: any) => ({
     time: `${entry.date} ${entry.time}`,
     date: entry.date,
     value: entry.value,
@@ -266,7 +269,21 @@ export default function HealthTracker() {
 
           {chartData.length > 0 && (
             <div className="section">
-              <h2>Tendencia de Glucosa</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2>Tendencia de Glucosa</h2>
+                <select
+                  value={glucoseFilter}
+                  onChange={(e) => setGlucoseFilter(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: '6px', border: '2px solid #d1d5db' }}
+                >
+                  <option value="all">Todos los tipos</option>
+                  <option value="ayuno">Solo Ayuno</option>
+                  <option value="desayuno">Solo Desayuno</option>
+                  <option value="comida">Solo Comida</option>
+                  <option value="cena">Solo Cena</option>
+                  <option value="antes-dormir">Solo Antes de Dormir</option>
+                </select>
+              </div>
               <div style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#6b7280' }}>
                 <span style={{ background: '#d1fae5', padding: '2px 8px', borderRadius: '4px', marginRight: '10px' }}>
                   🏋️ Días de gimnasio
@@ -332,7 +349,7 @@ export default function HealthTracker() {
 
           <div className="section">
             <h2>Registros Recientes</h2>
-            {glucoseEntries.slice().reverse().slice(0, 10).map((entry: any) => (
+            {glucoseEntries.slice(-10).reverse().map((entry: any) => (
               <div key={entry.id} className="record-item">
                 <span style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2563eb' }}>
                   {entry.value} mg/dL
