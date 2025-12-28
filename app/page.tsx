@@ -12,6 +12,7 @@ export default function HealthTracker() {
   const [sleepEntries, setSleepEntries] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [analytics, setAnalytics] = useState<any>(null)
+  const [medicationStatus, setMedicationStatus] = useState<any>({})
   const [loading, setLoading] = useState(false)
 
   // Form states
@@ -36,12 +37,13 @@ export default function HealthTracker() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [glucoseRes, medsRes, sleepRes, activitiesRes, analyticsRes] = await Promise.all([
+      const [glucoseRes, medsRes, sleepRes, activitiesRes, analyticsRes, adherenceRes] = await Promise.all([
         fetch(`${API_URL}/api/glucose`),
         fetch(`${API_URL}/api/medications`),
         fetch(`${API_URL}/api/sleep`),
         fetch(`${API_URL}/api/activities`),
-        fetch(`${API_URL}/api/analytics`)
+        fetch(`${API_URL}/api/analytics`),
+        fetch(`${API_URL}/api/medications/adherence`)
       ])
 
       if (glucoseRes.ok) setGlucoseEntries(await glucoseRes.json())
@@ -49,6 +51,22 @@ export default function HealthTracker() {
       if (sleepRes.ok) setSleepEntries(await sleepRes.json())
       if (activitiesRes.ok) setActivities(await activitiesRes.json())
       if (analyticsRes.ok) setAnalytics(await analyticsRes.json())
+      
+      // Process medication adherence for today
+      if (adherenceRes.ok) {
+        const adherenceData = await adherenceRes.json()
+        const today = new Date().toLocaleDateString('es-ES')
+        const todayStatus: any = {}
+        
+        adherenceData.forEach((entry: any) => {
+          if (entry.date === today) {
+            const key = `${entry.medication_id}-${entry.scheduled_time}`
+            todayStatus[key] = entry.status
+          }
+        })
+        
+        setMedicationStatus(todayStatus)
+      }
     } catch (error) {
       console.error('Error loading data:', error)
     }
@@ -141,6 +159,14 @@ export default function HealthTracker() {
           status
         })
       })
+      
+      // Update local state immediately for better UX
+      const key = `${medicationId}-${scheduledTime}`
+      setMedicationStatus((prev: any) => ({
+        ...prev,
+        [key]: status
+      }))
+      
       loadData()
     } catch (error) {
       console.error('Error logging medication adherence:', error)
@@ -266,31 +292,54 @@ export default function HealthTracker() {
       {activeTab === 'medications' && (
         <div>
           <div className="section">
-            <h2>Medicamentos Programados</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>Medicamentos Programados</h2>
+              <button
+                onClick={() => setMedicationStatus({})}
+                className="button secondary"
+                style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+              >
+                Reiniciar Día
+              </button>
+            </div>
             {medications.map((med: any) => (
               <div key={med.id} className="med-card">
                 <h3>{med.name}</h3>
                 <p style={{ marginBottom: '15px', color: '#6b7280' }}>{med.dosage} - {med.frequency}</p>
                 <div className="button-group">
-                  {med.times.map((time: any) => (
+                  {med.times.map((time: any) => {
+                    const key = `${med.id}-${time}`
+                    const status = medicationStatus[key]
+                    
+                    return (
                     <div key={time} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                       <span style={{ fontWeight: '600', minWidth: '60px' }}>{time}</span>
-                      <button
-                        onClick={() => logMedicationAdherence(med.id, time, 'tomado')}
-                        className="button green"
-                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                      >
-                        Tomado
-                      </button>
-                      <button
-                        onClick={() => logMedicationAdherence(med.id, time, 'omitido')}
-                        className="button red"
-                        style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-                      >
-                        Omitido
-                      </button>
+                      
+                      {status === 'tomado' ? (
+                        <span className="badge green" style={{ padding: '8px 16px' }}>✓ Tomado</span>
+                      ) : status === 'omitido' ? (
+                        <span className="badge red" style={{ padding: '8px 16px' }}>✗ Omitido</span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => logMedicationAdherence(med.id, time, 'tomado')}
+                            className="button green"
+                            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                          >
+                            Tomado
+                          </button>
+                          <button
+                            onClick={() => logMedicationAdherence(med.id, time, 'omitido')}
+                            className="button red"
+                            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                          >
+                            Omitido
+                          </button>
+                        </>
+                      )}
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             ))}
