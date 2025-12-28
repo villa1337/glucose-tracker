@@ -181,7 +181,7 @@ export default function HealthTracker() {
     }
   }
 
-  const chartData = glucoseEntries.slice(0, 30).reverse().map((entry: any) => ({
+  const chartData = glucoseEntries.slice().reverse().map((entry: any) => ({
     time: `${entry.date} ${entry.time}`,
     date: entry.date,
     value: entry.value,
@@ -332,7 +332,7 @@ export default function HealthTracker() {
 
           <div className="section">
             <h2>Registros Recientes</h2>
-            {glucoseEntries.slice(0, 10).map((entry: any) => (
+            {glucoseEntries.slice().reverse().slice(0, 10).map((entry: any) => (
               <div key={entry.id} className="record-item">
                 <span style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2563eb' }}>
                   {entry.value} mg/dL
