@@ -300,16 +300,7 @@ export default function HealthTracker() {
       {activeTab === 'medications' && (
         <div>
           <div className="section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>Medicamentos Programados</h2>
-              <button
-                onClick={() => setMedicationStatus({})}
-                className="button secondary"
-                style={{ padding: '8px 16px', fontSize: '0.9rem' }}
-              >
-                Reiniciar Día
-              </button>
-            </div>
+            <h2>Medicamentos Programados</h2>
             {medications.map((med: any) => (
               <div key={med.id} className="med-card">
                 <h3>{med.name}</h3>
