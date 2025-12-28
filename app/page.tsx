@@ -183,6 +183,7 @@ export default function HealthTracker() {
 
   const chartData = glucoseEntries.slice(0, 20).reverse().map((entry: any) => ({
     time: `${entry.date} ${entry.time}`,
+    date: entry.date,
     value: entry.value,
     type: entry.type
   }))
@@ -266,14 +267,63 @@ export default function HealthTracker() {
           {chartData.length > 0 && (
             <div className="section">
               <h2>Tendencia de Glucosa</h2>
+              <div style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#6b7280' }}>
+                <span style={{ background: '#d1fae5', padding: '2px 8px', borderRadius: '4px', marginRight: '10px' }}>
+                  🏋️ Días de gimnasio
+                </span>
+                Días normales
+              </div>
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="time" />
                     <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} />
+                    <Tooltip 
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload
+                          const hasGym = activities.some((activity: any) => 
+                            activity.date === data.date && activity.type === 'gimnasio'
+                          )
+                          return (
+                            <div style={{ 
+                              background: 'white', 
+                              padding: '10px', 
+                              border: '1px solid #ccc', 
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                            }}>
+                              <p>{`${label}: ${payload[0].value} mg/dL`}</p>
+                              <p style={{ color: '#6b7280' }}>{`Tipo: ${data.type}`}</p>
+                              {hasGym && <p style={{ color: '#059669' }}>🏋️ Día de gimnasio</p>}
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#2563eb" 
+                      strokeWidth={3}
+                      dot={(props: any) => {
+                        const hasGym = activities.some((activity: any) => 
+                          activity.date === props.payload.date && activity.type === 'gimnasio'
+                        )
+                        return (
+                          <circle
+                            cx={props.cx}
+                            cy={props.cy}
+                            r={hasGym ? 6 : 4}
+                            fill={hasGym ? '#10b981' : '#2563eb'}
+                            stroke={hasGym ? '#059669' : '#1d4ed8'}
+                            strokeWidth={2}
+                          />
+                        )
+                      }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -543,31 +593,6 @@ export default function HealthTracker() {
                         >
                           {analytics.sleep_quality.map((entry: any, index: number) => (
                             <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28'][index % 3]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-
-                {analytics.activity_summary?.length > 0 && (
-                  <div className="chart-container">
-                    <h3>Distribución de Actividades</h3>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={analytics.activity_summary}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({type, sessions}) => `${type}: ${sessions}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="sessions"
-                        >
-                          {analytics.activity_summary.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={['#FF8042', '#8884D8', '#82CA9D', '#FFC658'][index % 4]} />
                           ))}
                         </Pie>
                         <Tooltip />
