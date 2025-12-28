@@ -58,13 +58,19 @@ export default function HealthTracker() {
         const today = new Date().toLocaleDateString('es-ES')
         const todayStatus: any = {}
         
+        console.log('Today:', today)
+        console.log('Adherence data:', adherenceData)
+        
         adherenceData.forEach((entry: any) => {
+          console.log('Entry date:', entry.date, 'matches today:', entry.date === today)
           if (entry.date === today) {
             const key = `${entry.medication_id}-${entry.scheduled_time}`
             todayStatus[key] = entry.status
+            console.log('Added status:', key, entry.status)
           }
         })
         
+        console.log('Final status:', todayStatus)
         setMedicationStatus(todayStatus)
       }
     } catch (error) {
